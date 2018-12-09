@@ -14,6 +14,7 @@ const SimpleWebCrawler = function(url) {
     Test URL: https://www.jobstreet.com.ph/en/job-search/find-company?c=a
     
     Exit code. Test description
+    1. Test no URL
     1. Test invalid URL with invalid protocol
     1. Test invalid URL with valid protocol
     1. Test valid URL with invalid protocol
@@ -49,7 +50,12 @@ const SimpleWebCrawler = function(url) {
   }
   
   // TODO:
-  function validateURL() {}
+  function isValidURL() {
+    if (isNull(url) || url == "")
+      return false;
+    
+    checkURLprotocol();
+  }
   
   function isNull(obj) {
     if (obj == undefined || obj == null)
@@ -85,6 +91,8 @@ const SimpleWebCrawler = function(url) {
         process.exit(2);
       }
       
+      log("Downloading from " + url);
+      
       let bufferData = "";
       resp.on("data", (chunk) => {
         bufferData += chunk.toString();
@@ -97,9 +105,15 @@ const SimpleWebCrawler = function(url) {
         createDownloadDir();
         let dirRead = path.join(dirDownloads, uuid())
         fs.mkdirSync(dirRead);
-          
+        
+        //TODO: change read to website name
         fs.writeFileSync(
           path.join(dirRead, "read.txt"), bufferData);
+          
+        fs.writeFileSync(
+          path.join(dirRead, "url.txt"), url);
+        
+        log("Download saved in " + dirRead);
       });
       
       resp.on("error", (e) => {
@@ -111,8 +125,7 @@ const SimpleWebCrawler = function(url) {
     });
   }
   
-  checkURLprotocol();
-  if (isNull(protocol)) {
+  if (isValidURL() || isNull(protocol)) {
     log("URL protocol must be a WWW protocol");
     process.exit(1);
   }
