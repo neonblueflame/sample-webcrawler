@@ -1,10 +1,14 @@
 {
-  "name": "sample-webcrawler",
-  "version": "1.0.0",
+  "name": "SimpleWebCrawler",
+  "version": "1.1.0",
   "description": "Webcrawler done using NodeJS",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node Main.js",
+    "test": "Nothing yet"
+  },
+  "config": {
+    "dirDownloads": "download-page"
   },
   "repository": {
     "type": "git",

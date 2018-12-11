@@ -1,38 +1,21 @@
-const SimpleWebCrawler = function(url) {
-  
-  /**
-  * Exit codes:
-  * 0 - program exits without errors
-  * 1 - program exits due to invalid URL
-  * 2 - program exits due to HTTP errors
-  */
-  
-  /**
-    For unit test:
-    https://nodejs.org/api/child_process.html
-    
-    Test URL: https://www.jobstreet.com.ph/en/job-search/find-company?c=a
-    
-    Exit code. Test description
-    1. Test no URL
-    1. Test invalid URL with invalid protocol
-    1. Test invalid URL with valid protocol
-    1. Test valid URL with invalid protocol
-    1. Test valid URL with valid protocol
-    2. Test code 2xx with valid URL and valid protocol - dirDownloads created, file with web page contents created
-    2. Test code 4xx with valid URL and valid protocol
-    2. Test code 5xx with valid URL and valid protocol
-    
-    Test if download-page is not existing - create dir 1st
-    Test if download-page is existing - continue
-  */
+
+/**
+* Exit codes:
+* 0 - program exits without errors
+* 1 - program exits due to invalid URL
+* 2 - program exits due to HTTP errors
+*/
+
+function SimpleWebCrawler(url) {
+  "use strict";
   
   const fs = require("fs");
   const path = require("path");
   const uuid = require("uuid/v1");
   
-  const dirDownloads = "download-page";
+  const config = require("./package.json")["config"];
   
+  // Use http module if URL uses HTTP protocol or https if HTTPS
   var protocol;
   function checkURLprotocol() {
     var arrTemp = url.split(":");
@@ -44,12 +27,10 @@ const SimpleWebCrawler = function(url) {
       protocol = require("http");
   };
   
-  // TODO: Make this accessible/extendable
   function log(text) {
     console.log(text);
-  }
+  };
   
-  // TODO:
   function isValidURL() {
     if (isNull(url) || url == "")
       return false;
@@ -63,25 +44,22 @@ const SimpleWebCrawler = function(url) {
       
     else
       return false;
-  }
+  };
   
   function isStatusCodeOk(code) {
     // If status code is a number and is 2xx
-    if (typeof code == "number" 
-      && Math.floor(code / 100) == 2)
+    if (typeof code == "number" && Math.floor(code / 100) == 2)
       return true;
     
     else
       return false;
-  }
-  
+  };
+
   function createDownloadDir() {
-    if (!fs.existsSync(dirDownloads))
-      fs.mkdirSync(dirDownloads);
-  }
+    if (!fs.existsSync(config["dirDownloads"]))
+      fs.mkdirSync(config["dirDownloads"]);
+  };
   
-  // TODO: allow setting of callback to process response
-  // TODO: set as property, URL and callback
   function processWebPage() {
     protocol.get(url, (resp) => {
       
@@ -100,15 +78,12 @@ const SimpleWebCrawler = function(url) {
       
       //TODO:  write on file while reading from response?
       resp.on("end", () => {
-        log(bufferData);
-        
         createDownloadDir();
-        let dirRead = path.join(dirDownloads, uuid())
+        let dirRead = path.join(config["dirDownloads"], uuid())
         fs.mkdirSync(dirRead);
         
-        //TODO: change read to website name
         fs.writeFileSync(
-          path.join(dirRead, "read.txt"), bufferData);
+          path.join(dirRead, "page.txt"), bufferData);
           
         fs.writeFileSync(
           path.join(dirRead, "url.txt"), url);
@@ -123,13 +98,19 @@ const SimpleWebCrawler = function(url) {
     }).on("error", (e) => {
       log(e);
     });
-  }
+  };
   
-  if (isValidURL() || isNull(protocol)) {
-    log("URL protocol must be a WWW protocol");
-    process.exit(1);
-  }
+  return {
+    url: "",
+    crawl: function() {
+      if (isValidURL() || isNull(protocol)) {
+        log("URL protocol must be a WWW protocol");
+        process.exit(1);
+      }
+      
+      processWebPage();
+    }
+  };
   
-  processWebPage();
-  
-}(process.argv[2]);
+}
+module.exports = SimpleWebCrawler;
